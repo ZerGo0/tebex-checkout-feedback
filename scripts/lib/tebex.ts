@@ -39,12 +39,9 @@ export async function newBasket(extra: Record<string, unknown> = {}) {
   return json;
 }
 
-let count = 0;
-
-export function finding(title: string, expected: string, actual: string | string[]) {
-  count += 1;
+export function finding(point: number, title: string, expected: string, actual: string | string[]) {
   const lines = Array.isArray(actual) ? actual : [actual];
-  console.log(`\n${count}. ${title}`);
+  console.log(`\n${point}. ${title}`);
   console.log(`   Expected: ${expected}`);
   lines.forEach((line, index) => console.log(`   ${index === 0 ? 'Actual:  ' : '         '} ${line}`));
 }

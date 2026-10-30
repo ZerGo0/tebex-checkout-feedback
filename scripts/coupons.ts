@@ -13,13 +13,13 @@ const apply = async (body: Record<string, string>) => {
 
 const spec = await (await fetch(specUrl)).text();
 finding(
-  'Applying a coupon isn\'t documented for the Checkout API',
+  1,  'Applying a coupon isn\'t documented for the Checkout API',
   'POST /baskets/{ident}/coupons is in the Checkout API docs and spec',
   `checkout-api.yaml v1.1.5 mentions a coupons path: ${spec.includes('/coupons')}`,
 );
 
 finding(
-  'The route rejects the Headless API\'s body, saying the coupon doesn\'t exist',
+  2,  'The route rejects the Headless API\'s body, saying the coupon doesn\'t exist',
   '{"coupon_code": ...} works, as on the Headless API, or a 400 that says the field is missing',
   [
     await apply({ coupon_code: code }),

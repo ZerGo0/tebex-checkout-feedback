@@ -151,13 +151,13 @@ Point 3 isn't scripted. Coupon creation is documented in the [Plugin API](https:
 
 ### `pnpm sdk <paid basket ident>`
 
-Checks Node SDK points 2 to 7, printed as 1 to 6:
+Checks Node SDK points 2 to 7:
 
-1. Requires the package's entry point.
-2. Type-checks a one-line import of the SDK with `tsc --strict`.
-3. Reads your paid basket through the SDK and through the API.
-4. Creates a basket through the SDK with `emailImmutable` and `email_immutable` set to `true`.
-5. Lists the SDK's Checkout methods with "coupon" in the name.
-6. Prints the line in `dist/tebex-request.js` that loads the HTTP client.
+2. Requires the package's entry point.
+3. Type-checks a one-line import of the SDK with `tsc --strict`.
+4. Reads your paid basket through the SDK and through the API.
+5. Creates a basket through the SDK with `emailImmutable` and `email_immutable` set to `true`.
+6. Lists the SDK's Checkout methods with "coupon" in the name.
+7. Prints the line in `dist/tebex-request.js` that loads the HTTP client.
 
 Point 1 isn't scripted. Run `pnpm add @tebexio/tebex-sdk-nodejs` in an empty folder to see it. This repo's `pnpm-workspace.yaml` allows the SDK's GitHub dependency and skips its build scripts, so it installs here.
