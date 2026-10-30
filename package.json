@@ -1,0 +1,23 @@
+{
+  "name": "tebex-checkout-feedback",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.9.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "spec": "orval --config orval.config.ts > /dev/null && tsx --no-deprecation --env-file=.env scripts/spec.ts",
+    "coupons": "tsx --no-deprecation --env-file=.env scripts/coupons.ts",
+    "sdk": "tsx --no-deprecation --env-file=.env scripts/sdk.ts"
+  },
+  "dependencies": {
+    "@tebexio/tebex-sdk-nodejs": "1.0.0"
+  },
+  "devDependencies": {
+    "orval": "8.40.0",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "zod": "4.6.6"
+  }
+}

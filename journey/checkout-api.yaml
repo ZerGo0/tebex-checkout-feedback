@@ -1,0 +1,309 @@
+openapi: 3.1.0
+info:
+  title: Tebex Checkout API
+  version: 1.0.0
+  description: The part of the Tebex Checkout API that Journey uses, checked against real responses.
+servers:
+  - url: https://checkout.tebex.io/api
+security:
+  - basicAuth: []
+paths:
+  /baskets:
+    post:
+      operationId: createBasket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBasketRequest'
+      responses:
+        '200':
+          description: The created basket.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basket'
+  /baskets/{ident}:
+    get:
+      operationId: getBasket
+      parameters:
+        - $ref: '#/components/parameters/BasketIdent'
+      responses:
+        '200':
+          description: The basket.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basket'
+  /baskets/{ident}/packages:
+    post:
+      operationId: addBasketPackage
+      parameters:
+        - $ref: '#/components/parameters/BasketIdent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBasketPackageRequest'
+      responses:
+        '200':
+          description: The basket with the package added.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basket'
+  /baskets/{ident}/sales:
+    post:
+      operationId: addBasketSale
+      description: Discounts every item in the basket. Shown to the customer as a discount line named after the sale.
+      parameters:
+        - $ref: '#/components/parameters/BasketIdent'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddBasketSaleRequest'
+      responses:
+        '200':
+          description: The basket with the sale applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Basket'
+  /payments/{transactionId}:
+    get:
+      operationId: getPayment
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/PaymentReferenceType'
+      responses:
+        '200':
+          description: The payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+  /payments/{transactionId}/refund:
+    post:
+      operationId: refundPayment
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+        - $ref: '#/components/parameters/PaymentReferenceType'
+      responses:
+        '200':
+          description: The refunded payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '422':
+          description: Only payments with the Complete status can be refunded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: The project ID as username and the private key as password.
+  parameters:
+    BasketIdent:
+      name: ident
+      in: path
+      required: true
+      schema:
+        type: string
+    TransactionId:
+      name: transactionId
+      in: path
+      required: true
+      description: A single payment's transaction ID, starting with `tbx-`.
+      schema:
+        type: string
+    PaymentReferenceType:
+      name: type
+      in: query
+      required: true
+      schema:
+        type: string
+        enum: [txn_id]
+  schemas:
+    CreateBasketRequest:
+      type: object
+      additionalProperties: false
+      required: [return_url, complete_url, complete_auto_redirect, custom]
+      properties:
+        email:
+          type: string
+        email_immutable:
+          type: boolean
+          description: Stops the customer changing the email on the checkout page.
+        ip:
+          type: string
+          description: The customer's IP address, required when creating baskets from a server.
+        return_url:
+          type: string
+          description: Where the customer goes when leaving the checkout without paying. Returned as `cancel_url`.
+        complete_url:
+          type: string
+          description: Where the customer goes after paying. Tebex appends `txn-id`.
+        complete_auto_redirect:
+          type: boolean
+        custom:
+          $ref: '#/components/schemas/CustomData'
+    AddBasketPackageRequest:
+      type: object
+      additionalProperties: false
+      required: [package, qty]
+      properties:
+        package:
+          type: object
+          additionalProperties: false
+          required: [name, price, type]
+          properties:
+            name:
+              type: string
+              description: Shown to the customer on the checkout page and receipts.
+            price:
+              type: number
+              description: The price in the project currency's major unit.
+            type:
+              type: string
+              enum: [single]
+        qty:
+          type: integer
+          minimum: 1
+    AddBasketSaleRequest:
+      type: object
+      additionalProperties: false
+      required: [name, discount_type, amount]
+      properties:
+        name:
+          type: string
+          description: Shown to the customer.
+        discount_type:
+          type: string
+          enum: [percentage, amount]
+        amount:
+          type: number
+          description: The percentage, or the amount in the project currency's major unit, taken off each item.
+    CustomData:
+      type: object
+      description: Data stored with the basket and its payment.
+      additionalProperties:
+        type: string
+    Basket:
+      type: object
+      required: [ident, complete, custom, links, payment]
+      properties:
+        ident:
+          type: string
+        complete:
+          type: boolean
+        custom:
+          oneOf:
+            - $ref: '#/components/schemas/CustomData'
+            - type: 'null'
+        links:
+          type: object
+          properties:
+            checkout:
+              type: string
+              description: Only present while the basket is unpaid.
+            payment:
+              type: string
+              description: Only present once the basket is paid.
+        payment:
+          description: The payment, once the customer has started paying.
+          oneOf:
+            - $ref: '#/components/schemas/BasketPayment'
+            - type: 'null'
+    BasketPayment:
+      type: object
+      required: [txnId]
+      properties:
+        txnId:
+          type: string
+        email:
+          type: [string, 'null']
+          description: Missing when the payment was declined, which Tebex reports with a `reason` instead.
+    Money:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+        currency:
+          type: string
+    Payment:
+      type: object
+      required:
+        [transaction_id, status, created_at, price_paid, fees, payment_method, customer, custom]
+      properties:
+        transaction_id:
+          type: string
+        status:
+          type: object
+          required: [id, description]
+          properties:
+            id:
+              type: integer
+              description: 1 Complete, 2 Refund, 3 Chargeback, 18 Declined, 19 Pending Checkout, 21 Refund Pending.
+            description:
+              type: string
+        created_at:
+          type: string
+        price_paid:
+          $ref: '#/components/schemas/Money'
+        fees:
+          type: object
+          required: [tax]
+          properties:
+            tax:
+              $ref: '#/components/schemas/Money'
+        payment_method:
+          type: object
+          required: [name]
+          properties:
+            name:
+              type: string
+              description: '`Test Payments` for test payments.'
+        customer:
+          type: object
+          required: [email]
+          properties:
+            email:
+              type: string
+        custom:
+          oneOf:
+            - $ref: '#/components/schemas/CustomData'
+            - type: 'null'
+    Webhook:
+      type: object
+      description: The body of a webhook request.
+      required: [id, type, subject]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          description: '`validation.webhook` or the event type, such as `payment.completed`.'
+        subject:
+          description: The event's object; a payment for `payment.*` events.
+    PaymentWebhookSubject:
+      type: object
+      required: [transaction_id]
+      properties:
+        transaction_id:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string

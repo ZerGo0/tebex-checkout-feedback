@@ -1,0 +1,5 @@
+allowBuilds:
+  '@openapitools/openapi-generator-cli': false
+  esbuild: true
+  openapitools: false
+blockExoticSubdeps: false
