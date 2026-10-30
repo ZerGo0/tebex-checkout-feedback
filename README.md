@@ -130,6 +130,14 @@ pnpm install
 
 Each command prints its points as Expected and Actual. The commands create baskets but never pay for them.
 
+We ran them against our test-mode project 1918915, so you can look up the same basket, payment and coupon:
+
+```sh
+pnpm spec dwuzqi-3c9b13797d686a7fa191fa78e35fcfdccf2d7e08 tbx-26930126a31912-7c3497
+pnpm coupons TEST10A
+pnpm sdk dwuzqi-3c9b13797d686a7fa191fa78e35fcfdccf2d7e08
+```
+
 ### `pnpm spec <paid basket ident> [<tbx- ID of a refunded payment>]`
 
 Checks Spec points 1 to 5. It generates a client from `checkout-api.yaml` v1.1.5 with Orval (into `generated/`, with response validation on), then:
