@@ -128,12 +128,36 @@ cp .env.example .env   # add your project ID and private key
 pnpm install
 ```
 
-```sh
-pnpm spec <paid basket ident> [<tbx- ID of a refunded payment>]
-pnpm coupons <code of a coupon in your project>
-pnpm sdk <paid basket ident>
-```
+Each command prints its points as Expected and Actual. The commands create baskets but never pay for them.
 
-Each prints the points above as Expected and Actual. The scripts create baskets but never pay for them. The optional refund is sent to a payment that's already refunded, so nothing changes.
+### `pnpm spec <paid basket ident> [<tbx- ID of a refunded payment>]`
 
-`pnpm-workspace.yaml` allows the SDK's GitHub dependency and skips its build scripts, so it installs (SDK point 1).
+Checks Spec points 1 to 5. It generates a client from `checkout-api.yaml` v1.1.5 with Orval (into `generated/`, with response validation on), then:
+
+1. Creates a basket through it.
+2. Reads your paid basket through it.
+3. Creates a basket with `"email_immutable": true`.
+4. Adds a package without a price or type.
+5. Sends an invalid sale and reads a basket that doesn't exist. If you pass a refunded payment, it also tries to refund it again, which changes nothing.
+
+### `pnpm coupons <code of a coupon in your project>`
+
+Checks Coupons points 1 and 2:
+
+1. Checks whether `checkout-api.yaml` v1.1.5 has a coupons path.
+2. Applies the code to a new basket with `coupon_code`, to another with `couponCode`, and applies a made-up code to a third.
+
+Point 3 isn't scripted. Coupon creation is documented in the [Plugin API](https://docs.tebex.io/plugin/endpoints/coupons#create-a-coupon).
+
+### `pnpm sdk <paid basket ident>`
+
+Checks Node SDK points 2 to 7, printed as 1 to 6:
+
+1. Requires the package's entry point.
+2. Type-checks a one-line import of the SDK with `tsc --strict`.
+3. Reads your paid basket through the SDK and through the API.
+4. Creates a basket through the SDK with `emailImmutable` and `email_immutable` set to `true`.
+5. Lists the SDK's Checkout methods with "coupon" in the name.
+6. Prints the line in `dist/tebex-request.js` that loads the HTTP client.
+
+Point 1 isn't scripted. Run `pnpm add @tebexio/tebex-sdk-nodejs` in an empty folder to see it. This repo's `pnpm-workspace.yaml` allows the SDK's GitHub dependency and skips its build scripts, so it installs here.
